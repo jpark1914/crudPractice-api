@@ -1,54 +1,96 @@
-const express = require('express')
+// const express = require('express')
+// const graphqlHTTP = require('express-graphql')
+// const bodyParser = require('body-parser');
+// const cors = require('cors');
+// const createError = require('http-errors');
+// const {Pool, Client} = require('pg');
+const {Sequelize} = require('sequelize')
+const _ = require('lodash')
+const Faker = require('faker')
 
-require('dotenv').config
 
-const helmet = require('helmet')
-const bodyParser = require('body-parser');
-const cors = require('cors') 
-const morgan = require('morgan')
+// const app = express()
 
-// db Connection w/ Heroku
-// const db = require('knex')({
-//   client: 'pg',
-//   connection: {
-//     connectionString: process.env.DATABASE_URL,
-//     ssl: true,
-//   }
+// //Middleware
+// app.use(bodyParser.json())
+// app.use(cors())
+// app.use(
+//     '/graphql',
+//     graphqlHTTP({
+//         schema: schema,
+//         graphiql: true,
+//     }),
+// );
+
+
+// const port = process.env.PORT || 5000
+// app.listen(port, () => console.log(`Server is listening on port ${port}`))
+
+// app.use(function (req, res, next) {
+//     next(createError(404));
 // });
 
-//db Connection w/ localhost
+// // error handler
+// app.use(function (err, req, res, next) {
+//     // set locals, only providing error in development
+//     res.locals.message = err.message;
+//     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-var db = require('knex') ({
-    client: 'pg',
-    connection: {
-        host: '127.0.0.1',
-        user: '',
-        password: '',
-        database: 'crud-practice-1'
+//     // render the error page
+//     res.status(err.status || 500);
+//     res.json({ error: err });
+// });
+
+
+
+//DATABASE SETUP
+
+const Conn = new Sequelize(
+    'api-practice',
+    'jordan',
+    'Park7937!',
+    {
+        dialect: 'postgres',
+        host: 'localhost'
+    }
+);
+
+const Person = Conn.define('person', {
+    firstName: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    lastName: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        validate: {
+            isEmail: true
+        }
+
     }
 })
 
-const main = require('./controllers/main')
- 
-//App 
-const app = express()
+const Post = Conn.define('post', {
+    title: {
+        type: Sequelize.STRING,
+        allowNull: false
+    }
+});
 
-//App middleware
+Person.hasMany(Post);
+Post.belongsTo(Person);
 
-app.use(bodyParser.json())
-app.use(cors());
-app.use(helmet())
-app.use(morgan('combined'))
-
-//App Routes - Auth
-
-app.get('/', (req,res) => res.send('hello world'))
-app.get('/crud', (req, res) => main.getTableData(req, res, db))
-app.post('/crud', (req, res) => main.postTableData(req, res, db))
-app.put('/crud', (req, res) => main.putTableData(req, res, db))
-app.delete('/crud', (req, res) => main.deleteTableData(req, res, db))
-
-//App Server Connection
-app.listen(process.env.PORT || 3000, () => {
-    console.log(`app is running on port ${process.env.PORT || 3000}`)
+Conn.sync({force: true})
+.then(() =>{
+    _.times(10, ()=>{
+        return Person.create({
+            firstName: Faker.name.firstName(),
+            lastName: Faker.name.lastName(),
+            email: Faker.internet.email()
+        })
+    })
 })
