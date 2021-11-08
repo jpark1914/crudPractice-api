@@ -20,7 +20,7 @@
     "express": "^4.17.1",
     "express-graphql": "^0.9.0",
     "faker": "^4.1.0",
-    "graphiql": "^0.17.5",
+    "graphiql": "^1.4.7",
     "graphql": "^14.6.0",
     "helmet": "^3.21.3",
     "http-errors": "^1.7.3",
